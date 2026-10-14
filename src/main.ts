@@ -3,12 +3,16 @@ import { Player } from './entities/Player';
 import { Track } from './world/track';
 import { ObstacleField } from './world/obstacles';
 import { checkCollisions } from './systems/collisions';
+import { PickupField } from './world/pickups';
+import { PowerUps } from './systems/powerUps';
+import { collectPickups } from './systems/collect';
+import { FOOTBALLS, POWER_UPS, POWER_UP_RULES, type PowerUpKind } from './config/pickups';
 import { Input } from './core/input';
 import { snapChaseCamera, updateChaseCamera } from './core/chaseCamera';
 import { createBeastEditor } from './ui/editor';
 import { createDebugPanel } from './ui/debugPanel';
 import { hud } from './ui/hud';
-import { loadBeast, saveBeast } from './core/save';
+import { loadBeast, loadXp, saveBeast, saveXp } from './core/save';
 
 type GameState = 'garage' | 'running';
 
@@ -37,27 +41,41 @@ scene.add(track.root);
 const obstacles = new ObstacleField();
 scene.add(obstacles.root);
 
+const pickups = new PickupField();
+scene.add(pickups.root);
+const powerUps = new PowerUps();
+
 const config = loadBeast();
 const player = new Player(config);
 scene.add(player.root);
+
+const shieldBubble = new THREE.Mesh(
+  new THREE.SphereGeometry(1.4, 24, 16),
+  new THREE.MeshBasicMaterial({ color: POWER_UPS.shield.color, transparent: true, opacity: 0.22, depthWrite: false }),
+);
+shieldBubble.position.y = 1.1;
+shieldBubble.visible = false;
+player.root.add(shieldBubble);
 
 const input = new Input(renderer.domElement);
 const editor = createBeastEditor(config, (b) => {
   player.beast.setConfig(b);
   saveBeast(b);
 });
-const debug = createDebugPanel();
+const debug = createDebugPanel((kind) => powerUps.activate(kind));
 
 let state: GameState = 'garage';
 let hasRun = false;
 let shake = 0; // camera shake after a hit, in seconds
+let runXp = 0;
+let totalXp = loadXp();
 
 function enterGarage(): void {
   state = 'garage';
   editor.show();
   hud.showOverlay(
     hasRun ? 'Garage' : 'Training Ground',
-    hasRun ? 'Tweak your beast, then get back out there.' : 'Edit your beast, then hit the field.',
+    `${hasRun ? 'Tweak your beast, then get back out there.' : 'Edit your beast, then hit the field.'} Total XP: ${totalXp}`,
     hasRun ? 'Resume' : 'Run',
     hasRun,
   );
@@ -73,6 +91,9 @@ function startRunning(): void {
 function newRun(): void {
   player.reset();
   obstacles.reset();
+  pickups.reset();
+  powerUps.reset();
+  runXp = 0;
   snapChaseCamera(camera, player.root);
   startRunning();
 }
@@ -104,12 +125,28 @@ renderer.setAnimationLoop(() => {
   if (state === 'running') {
     player.update(dt);
     obstacles.update(dt, player.root.position.z, player.distance);
+    pickups.update(dt, player.root.position.z, obstacles.active);
+    powerUps.update(dt);
+    player.boost = powerUps.isActive('speed') ? POWER_UP_RULES.speedMultiplier : 1;
+
     const hit = checkCollisions(player, obstacles.active);
     if (hit) {
-      player.stumble();
+      // speed boost smashes through; a shield absorbs one hit; otherwise you stumble
+      const protectedHit = powerUps.isActive('speed') || powerUps.consumeShield();
+      if (!protectedHit) player.stumble();
       hit.hit = true;
-      hit.knock.set((Math.random() - 0.5) * 6, 8, -player.speed * 0.8); // send it flying
-      shake = 0.35;
+      hit.knock.set((Math.random() - 0.5) * 6, 8, -player.speed * player.boost * 0.8); // send it flying
+      shake = protectedHit ? 0.15 : 0.35;
+    }
+
+    for (const p of collectPickups(dt, player, pickups.active, powerUps)) {
+      if (p.type === 'football') {
+        runXp += FOOTBALLS.xpEach;
+        totalXp += FOOTBALLS.xpEach;
+        saveXp(totalXp);
+      } else {
+        powerUps.activate(p.type);
+      }
     }
     facing.rotation.y = THREE.MathUtils.damp(facing.rotation.y, Math.PI, 10, dt);
   } else {
@@ -128,7 +165,10 @@ renderer.setAnimationLoop(() => {
   }
   sun.position.set(player.root.position.x + 5, 12, player.root.position.z + 6);
   sun.target.position.copy(player.root.position);
-  hud.setStats(player.distance, state === 'running' ? player.speed : 0, player.hits);
+  hud.setStats(player.distance, state === 'running' ? player.speed * player.boost : 0, player.hits);
+  hud.setXp(runXp);
+  hud.setPowerUps(powerUps.list().map(({ kind, left }) => ({ ...POWER_UPS[kind as PowerUpKind], left })));
+  shieldBubble.visible = powerUps.isActive('shield');
 
   renderer.render(scene, camera);
 });

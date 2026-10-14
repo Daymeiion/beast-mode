@@ -17,6 +17,14 @@ Left/right (A/D, arrows, d-pad, swipe) switch lanes · Up/Space jump · Down/S s
 
 Every row leaves a way through. A hit costs speed (keep ~55%) and gives ~1.2s of flashing invulnerability.
 
+## Pickups and power-ups
+| Pickup | Effect |
+|---|---|
+| Football (brown) | +1 XP, saved across runs |
+| Speed Boost (orange orb) | x1.6 speed for 4s, smash through obstacles |
+| Shield (blue orb) | absorbs the next hit, up to 15s |
+| Magnet (purple orb) | pulls footballs within 7 units for 8s |
+
 ## Gear (unlocked with XP)
 | Gear | Effect |
 |---|---|

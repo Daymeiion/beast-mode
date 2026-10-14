@@ -13,6 +13,7 @@ export class Player {
   speed = TUNING.startSpeed;
   distance = 0;
   hits = 0;
+  boost = 1; // speed multiplier from power-ups
 
   private lane = 0; // -1, 0, 1
   private velocityY = 0;
@@ -69,8 +70,8 @@ export class Player {
   update(dt: number): void {
     // forward
     this.speed = Math.min(TUNING.maxSpeed, this.speed + TUNING.acceleration * dt);
-    this.root.position.z -= this.speed * dt;
-    this.distance += this.speed * dt;
+    this.root.position.z -= this.speed * this.boost * dt;
+    this.distance += this.speed * this.boost * dt;
 
     // sideways toward the target lane
     const targetX = this.lane * TUNING.laneWidth;
@@ -88,7 +89,7 @@ export class Player {
     this.beast.root.visible = !this.invulnerable || Math.floor(this.invulnerableTimer * 12) % 2 === 0; // flash
 
     this.pose(dt, dx);
-    this.beast.update(dt, this.speed / TUNING.startSpeed);
+    this.beast.update(dt, (this.speed * this.boost) / TUNING.startSpeed);
   }
 
   reset(): void {
@@ -99,6 +100,7 @@ export class Player {
     this.speed = TUNING.startSpeed;
     this.distance = 0;
     this.hits = 0;
+    this.boost = 1;
     this.invulnerableTimer = 0;
     this.beast.root.visible = true;
   }

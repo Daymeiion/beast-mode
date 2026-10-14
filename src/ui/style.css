@@ -3,6 +3,9 @@ canvas { display: block; }
 #hud { position: fixed; top: 16px; left: 16px; color: #fff; pointer-events: none; text-shadow: 0 2px 6px #0008; }
 #hud h1 { margin: 0; font-size: 26px; letter-spacing: 2px; color: #ff7a1a; }
 #stats { margin-top: 4px; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+#xp-line { margin-top: 2px; font-size: 18px; font-weight: 700; color: #ffd23a; }
+#powerups { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { padding: 3px 8px; border-radius: 999px; font-size: 13px; font-weight: 700; color: #fff; }
 #pause-btn { position: fixed; top: 16px; right: 16px; width: 44px; height: 44px; border: 0; border-radius: 10px; background: #0008; color: #fff; font-size: 16px; cursor: pointer; }
 #overlay { position: fixed; inset: 0; display: flex; align-items: flex-end; justify-content: flex-start; padding: 16px; pointer-events: none; }
 #overlay.hidden { display: none; }
