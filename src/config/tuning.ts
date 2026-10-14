@@ -13,6 +13,9 @@ export const TUNING = {
   slideDuration: 0.65, // seconds
   slideHeightScale: 0.5,
 
+  playerWidth: 0.8, // hitbox
+  playerHeight: 2.1,
+
   tileLength: 20,
   tilesAhead: 8,
   tilesBehind: 1,

@@ -6,6 +6,17 @@ Left/right (A/D, arrows, d-pad, swipe) switch lanes · Up/Space jump · Down/S s
 ## Training Ground (demo level)
 3 lanes, endless forward run. Obstacles: tackling dummies, cones, hurdles, sleds, low bars. Hitting one = stumble (lose speed), not game over. Pickups: XP footballs, speed boost, shield, magnet. 2 to 3 CPU racers.
 
+## Obstacles
+| Obstacle | How to beat it |
+|---|---|
+| Tackling dummy (red) | dodge to another lane |
+| Sled | dodge |
+| Hurdle (white) | jump |
+| Cone | jump (or dodge) |
+| Low bar (yellow) | slide under |
+
+Every row leaves a way through. A hit costs speed (keep ~55%) and gives ~1.2s of flashing invulnerability.
+
 ## Gear (unlocked with XP)
 | Gear | Effect |
 |---|---|
