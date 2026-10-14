@@ -9,6 +9,14 @@ export const hud = {
     $('hits').textContent = hits.toString();
     $('speed').textContent = Math.round(speed * UNITS_TO_MPH * 3).toString();
   },
+  setXp(runXp: number): void {
+    $('xp').textContent = runXp.toString();
+  },
+  setPowerUps(items: { label: string; color: string; left: number }[]): void {
+    $('powerups').innerHTML = items
+      .map((p) => `<span class="chip" style="background:${p.color}">${p.label} ${Math.ceil(p.left)}s</span>`)
+      .join('');
+  },
   showOverlay(title: string, text: string, button: string, showNewRun: boolean): void {
     $('new-run-btn').style.display = showNewRun ? '' : 'none';
     $('overlay-title').textContent = title;

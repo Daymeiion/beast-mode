@@ -20,6 +20,25 @@ export function saveBeast(beast: BeastConfig): void {
   }
 }
 
+const XP_KEY = 'beast-mode:xp';
+
+/** Total XP across all runs. Spent on gear in milestone 4. */
+export function loadXp(): number {
+  try {
+    return Number(localStorage.getItem(XP_KEY)) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function saveXp(xp: number): void {
+  try {
+    localStorage.setItem(XP_KEY, String(xp));
+  } catch {
+    // ignore
+  }
+}
+
 function mergeDeep<T>(base: T, patch: unknown): T {
   if (typeof patch !== 'object' || patch === null) return base;
   for (const [k, v] of Object.entries(patch)) {
