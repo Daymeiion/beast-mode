@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>Beast Mode</title>
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="/src/ui/style.css" />
@@ -10,7 +10,16 @@
   <body>
     <div id="hud">
       <h1>BEAST MODE</h1>
-      <p>Milestone 0 · Training Ground preview</p>
+      <div id="stats"><span id="distance">0</span> yds · <span id="speed">0</span> mph</div>
+    </div>
+    <button id="pause-btn" aria-label="Pause">❚❚</button>
+    <div id="overlay">
+      <div class="card">
+        <h2 id="overlay-title">Training Ground</h2>
+        <p id="overlay-text">Edit your beast, then hit the field.</p>
+        <button id="run-btn">Run</button>
+        <p class="controls">← → / A D switch lanes · ↑ / W / Space jump · ↓ / S slide · Esc garage<br />Mobile: swipe to move, tap to jump</p>
+      </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

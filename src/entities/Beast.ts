@@ -7,6 +7,8 @@ export class Beast {
   readonly root = new THREE.Group();
   private body = new THREE.Group();
   private time = 0;
+  private legs: THREE.Object3D[] = [];
+  private arms: THREE.Object3D[] = [];
 
   constructor(private config: BeastConfig) {
     this.root.add(this.body);
@@ -18,10 +20,18 @@ export class Beast {
     this.rebuild();
   }
 
-  update(dt: number): void {
+  /** runPace 0 = idle stance, 1+ = running (higher is faster strides). */
+  update(dt: number, runPace = 0): void {
     this.time += dt;
-    // idle "ready stance" bounce
-    this.body.position.y = Math.abs(Math.sin(this.time * 3)) * 0.05;
+    if (runPace <= 0) {
+      this.body.position.y = Math.abs(Math.sin(this.time * 3)) * 0.05; // idle "ready stance" bounce
+      for (const limb of [...this.legs, ...this.arms]) limb.rotation.x = 0;
+      return;
+    }
+    const phase = this.time * 9 * runPace;
+    this.body.position.y = Math.abs(Math.sin(phase)) * 0.12;
+    this.legs.forEach((leg, i) => (leg.rotation.x = Math.sin(phase + i * Math.PI) * 0.8));
+    this.arms.forEach((arm, i) => (arm.rotation.x = -Math.sin(phase + i * Math.PI) * 0.7));
   }
 
   private rebuild(): void {
@@ -29,19 +39,22 @@ export class Beast {
     const { colors, body, gear, number } = this.config;
     const b = body.bulk;
     const mat = (c: string, rough = 0.6) => new THREE.MeshStandardMaterial({ color: c, roughness: rough });
-    const add = (geo: THREE.BufferGeometry, m: THREE.Material, x: number, y: number, z: number) => {
+    const add = (geo: THREE.BufferGeometry, m: THREE.Material, x: number, y: number, z: number, parent: THREE.Object3D = this.body) => {
       const mesh = new THREE.Mesh(geo, m);
       mesh.position.set(x, y, z);
       mesh.castShadow = true;
-      this.body.add(mesh);
+      parent.add(mesh);
       return mesh;
     };
 
-    // legs
+    // legs (each in a hip pivot so it can swing)
+    this.legs = [];
     for (const side of [-1, 1]) {
-      add(new THREE.CapsuleGeometry(0.17 * b, 0.55, 4, 10), mat(colors.pants), side * 0.22 * b, 0.62, 0);
-      add(new THREE.BoxGeometry(0.22 * b, 0.08, 0.04), mat(colors.trim), side * 0.22 * b, 0.55, 0.17 * b);
-      if (gear.cleats) add(new THREE.BoxGeometry(0.24 * b, 0.14, 0.38), mat(colors.cleats, 0.4), side * 0.22 * b, 0.1, 0.06);
+      const hip = this.pivot(side * 0.22 * b, 1.0, 0);
+      this.legs.push(hip);
+      add(new THREE.CapsuleGeometry(0.17 * b, 0.55, 4, 10), mat(colors.pants), 0, -0.38, 0, hip);
+      add(new THREE.BoxGeometry(0.22 * b, 0.08, 0.04), mat(colors.trim), 0, -0.45, 0.17 * b, hip);
+      if (gear.cleats) add(new THREE.BoxGeometry(0.24 * b, 0.14, 0.38), mat(colors.cleats, 0.4), 0, -0.9, 0.06, hip);
     }
 
     // torso with jersey number front and back
@@ -60,10 +73,13 @@ export class Beast {
       add(new THREE.SphereGeometry(0.26 * p, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat(colors.pads, 0.3), side * 0.42 * b, 1.62, 0);
     }
 
-    // arms + gloves
+    // arms + gloves (each in a shoulder pivot)
+    this.arms = [];
     for (const side of [-1, 1]) {
-      add(new THREE.CapsuleGeometry(0.13 * b, 0.45, 4, 10), mat(colors.skin), side * 0.58 * b, 1.22, 0);
-      add(new THREE.SphereGeometry(0.13 * b, 12, 10), mat(gear.gloves ? colors.cleats : colors.skin), side * 0.58 * b, 0.88, 0);
+      const shoulder = this.pivot(side * 0.58 * b, 1.55, 0);
+      this.arms.push(shoulder);
+      add(new THREE.CapsuleGeometry(0.13 * b, 0.45, 4, 10), mat(colors.skin), 0, -0.33, 0, shoulder);
+      add(new THREE.SphereGeometry(0.13 * b, 12, 10), mat(gear.gloves ? colors.cleats : colors.skin), 0, -0.67, 0, shoulder);
     }
 
     // head / helmet
@@ -76,6 +92,13 @@ export class Beast {
     }
 
     this.body.scale.setScalar(body.height);
+  }
+
+  private pivot(x: number, y: number, z: number): THREE.Group {
+    const g = new THREE.Group();
+    g.position.set(x, y, z);
+    this.body.add(g);
+    return g;
   }
 }
 
